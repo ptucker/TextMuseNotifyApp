@@ -150,7 +150,7 @@ class NotificationState extends State<Notification> {
     Map<String, String> body = {
       'lalooshpwd':'EbbyCalvin',
       'push':tcNotification.text,
-      'spon':_selectedVersion,
+      'skin':_selectedVersion,
     };
     if (_selectedHighlight != '0')
       body['highlight'] = _selectedHighlight;
@@ -160,7 +160,11 @@ class NotificationState extends State<Notification> {
     final respNotes = http.post(url, body: body);
     respNotes.then((resp) {
       if (resp.statusCode == 200) {
-            alert(resp.body);
+        RegExp regex = RegExp(r'<p>(.*)<br/></p>');
+        if (regex.hasMatch(resp.body) && regex.firstMatch(resp.body).groupCount > 1)
+          alert(regex.firstMatch(resp.body).group(1).trim());
+        else
+          alert(resp.body);
       }
 
     });
