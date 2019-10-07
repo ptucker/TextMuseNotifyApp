@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -81,6 +80,27 @@ class NotificationState extends State<Notification> {
     fetchCategories();
   }
 
+  Future<void> alert(String text) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Alert'),
+          content: Text(text),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void fetchCategories() {
     String url = 'https://www.textmuse.com/admin/categories.php';
     if (_selectedVersion != null && _selectedVersion.length > 0 && _selectedVersion != '0')
@@ -120,6 +140,27 @@ class NotificationState extends State<Notification> {
         _highlightNotes.insert(0, HighlightNote(id: '0', note: '<none>'));
         _selectedHighlight = _highlightNotes[0].id;
         setState(() {});
+      }
+
+    });
+  }
+
+  void postNotification() {
+    final url = "https://www.textmuse.com/admin/notify.php";
+    Map<String, String> body = {
+      'lalooshpwd':'EbbyCalvin',
+      'push':tcNotification.text,
+      'spon':_selectedVersion,
+    };
+    if (_selectedHighlight != '0')
+      body['highlight'] = _selectedHighlight;
+    if (_selectedCategory != '0')
+      body['cathighlight'] = _selectedCategory;
+
+    final respNotes = http.post(url, body: body);
+    respNotes.then((resp) {
+      if (resp.statusCode == 200) {
+            alert(resp.body);
       }
 
     });
@@ -185,7 +226,7 @@ class NotificationState extends State<Notification> {
                 child: Text('notify'),
                 color: Theme.of(context).accentColor, 
                 textColor: Colors.white, 
-                onPressed: () {},),
+                onPressed: () { postNotification(); },),
               ),
             ],
             )
